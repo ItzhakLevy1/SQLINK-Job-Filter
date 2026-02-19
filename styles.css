@@ -1,0 +1,66 @@
+.applied-job {
+  /* Styles for a job that has been applied for */
+  border: 5px solid #4caf50;
+  border-radius: 10px;
+  background-color: #005503;
+  box-shadow: 0 0 8px rgba(76, 175, 80, 0.5); /* A subtle green glow */
+  transition: all 0.3s ease-in-out;
+}
+
+.applied-job .job-title {
+  color: #388e3c; /* Darker green for the title */
+}
+
+/* Optional: Add a checkmark icon */
+.applied-job::after {
+  color: #ffffff;
+  content: "✅ Applied";
+  position: absolute;
+  top: 2em;
+  right: 2em;
+  font-size: 80px;
+  font-weight: bolder;
+  transform: rotate(10deg);
+  /* Place each word on a new line */
+  /* display: inline-block; 
+  max-width: min-content; */
+}
+
+/******************** The extention message that indicates that the extension in working ********************/
+.my-extension-banner {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background-color: rgba(0, 0, 0, 0.85);
+  color: white;
+  padding: 10px 15px;
+  border-radius: 8px;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  z-index: 999999;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+}
+
+.my-extension-close {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: transform 0.2s;
+}
+
+.my-extension-close:hover {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  font-weight: bold;
+  transform: scale(1.3);
+}
