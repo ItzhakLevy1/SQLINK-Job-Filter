@@ -1,19 +1,13 @@
 .applied-job {
-  /* Styles for a job that has been applied for */
-  border: 5px solid #4caf50;
-  border-radius: 10px;
-  background-color: #005503;
-  box-shadow: 0 0 8px rgba(76, 175, 80, 0.5); /* A subtle green glow */
-  transition: all 0.3s ease-in-out;
+  border: 3px solid #4caf50 !important;
+  background-color: #d4edda !important; /* Green tint */
+  position: relative;
+  overflow: hidden;
 }
 
-.applied-job .job-title {
-  color: #388e3c; /* Darker green for the title */
-}
-
-/* Optional: Add a checkmark icon */
+/* The visual badge */
 .applied-job::after {
-  color: #ffffff;
+  color: #00ff11;
   content: "✅ Applied";
   position: absolute;
   top: 2em;
