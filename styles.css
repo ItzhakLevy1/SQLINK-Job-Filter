@@ -1,8 +1,16 @@
 .applied-job {
   border: 3px solid #4caf50 !important;
+  border-radius: 30px;
   background-color: #d4edda !important; /* Green tint */
   position: relative;
   overflow: hidden;
+}
+
+/* Adding these selectors to ensure that the background is also colored in the inner layers of SQLink */
+.applied-job .panel,
+.applied-job .article,
+.applied-job .positionArticle {
+  background-color: #d4edda !important;
 }
 
 /* The visual badge */
