@@ -55,11 +55,56 @@ function ensureExtensionBanner() {
   document.body.appendChild(messageDiv);
 }
 
-
 /*************************************************
- * Filtering logic (based on actual DOM structure)
+ * Filtering logic & Hebrew NLP
  *************************************************/
-const EXPERIENCE_REGEX = /(\d+)\+?\s*(שנות|שנה)/g;
+
+// Mapping Hebrew word-based numbers to integers
+const HEBREW_NUMBERS_MAP = {
+  'אחד': 1, 'אחת': 1,
+  'שני': 2, 'שתיים': 2, 'שתי': 2,
+  'שלוש': 3, 'שלושה': 3,
+  'ארבע': 4, 'ארבעה': 4,
+  'חמש': 5, 'חמישה': 5,
+  'שש': 6, 'שישה': 6,
+  'שבע': 7, 'שבעה': 7,
+  'שמונה': 8, 'שמונעה': 8,
+  'תשע': 9, 'תשעה': 9,
+  'עשר': 10, 'עשרה': 10
+};
+
+/**
+ * Extracts the maximum years of experience mentioned in a string.
+ * Handles digits (4+), Hebrew words (חמש), and various sentence structures.
+ */
+function extractExperienceYears(text) {
+  let maxYears = 0;
+  const wordKeys = Object.keys(HEBREW_NUMBERS_MAP).join('|');
+
+  // 1. Match digits: "4+ years", "5 שנים", etc.
+  const digitRegex = /(\d+)\+?\s*(שנה|שנות|שנים)/g;
+  let match;
+  while ((match = digitRegex.exec(text)) !== null) {
+    maxYears = Math.max(maxYears, parseInt(match[1], 10));
+  }
+
+  // 2. Match Hebrew words: "חמש שנים", "שלוש שנות"
+  const wordRegex = new RegExp(`(${wordKeys})\\s*(שנה|שנות|שנים)`, 'g');
+  while ((match = wordRegex.exec(text)) !== null) {
+    maxYears = Math.max(maxYears, HEBREW_NUMBERS_MAP[match[1]]);
+  }
+
+  // 3. Match reverse/complex structures: "ניסיון של 4 שנים", "מעל שמונה שנות"
+  // This helps capturing "ניסיון של [מספר/מילה] שנים"
+  const complexRegex = new RegExp(`(?:ניסיון|של|מעל|לפחות|מינימום)\\s+(${wordKeys}|\\d+)\\s*(?:שנה|שנות|שנים)`, 'g');
+  while ((match = complexRegex.exec(text)) !== null) {
+    const val = match[1];
+    const num = HEBREW_NUMBERS_MAP[val] || parseInt(val, 10);
+    if (!isNaN(num)) maxYears = Math.max(maxYears, num);
+  }
+
+  return maxYears;
+}
 
 function filterJobsByExperience() {
   const jobs = document.querySelectorAll(".positionItem");
@@ -72,17 +117,12 @@ function filterJobsByExperience() {
     if (!requirements) return;
 
     const text = requirements.innerText;
-    let maxYears = 0;
-    let match;
+    const yearsFound = extractExperienceYears(text);
 
-    while ((match = EXPERIENCE_REGEX.exec(text)) !== null) {
-      const years = parseInt(match[1], 10);
-      if (!isNaN(years)) {
-        maxYears = Math.max(maxYears, years);
-      }
-    }
-
-    job.style.display = maxYears >= 4 ? "none" : "";
+    // Filter logic: Hide if years required >= 3
+    // We only hide if we explicitly found a number. 
+    // If yearsFound is 0, it might be a junior position without a number.
+    job.style.display = yearsFound >= 3 ? "none" : "";
 
     // Check if job has been applied for
     const jobIdElement = job.querySelector(".description.number");
@@ -104,6 +144,9 @@ function addApplyButtonListeners() {
   const applyLinks = document.querySelectorAll("a.sendPopupCVinner");
 
   applyLinks.forEach((link) => {
+    // Avoid adding multiple listeners to the same element
+    if (link.getAttribute('data-listener-added')) return;
+    
     link.addEventListener("click", (event) => {
       const jobContainer = event.target.closest(".positionItem");
       if (!jobContainer) return;
@@ -126,6 +169,8 @@ function addApplyButtonListeners() {
 
       jobContainer.classList.add("applied-job");
     });
+
+    link.setAttribute('data-listener-added', 'true');
   });
 }
 
