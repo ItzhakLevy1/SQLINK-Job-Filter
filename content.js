@@ -12,12 +12,12 @@ let bannerClosed = false;
 function ensureExtensionBanner() {
   if (!document.body) return;
   if (bannerClosed) return;
-  if (document.querySelector(".my-extension-banner")) return;
+  if (document.querySelector('.my-extension-banner')) return;
 
-  const messageDiv = document.createElement("div");
-  messageDiv.className = "my-extension-banner";
+  const messageDiv = document.createElement('div');
+  messageDiv.className = 'my-extension-banner';
 
-  const textSpan = document.createElement("span");
+  const textSpan = document.createElement('span');
 
   const messageHTML = `
     <div>
@@ -41,11 +41,11 @@ function ensureExtensionBanner() {
 
   textSpan.innerHTML = messageHTML;
 
-  const closeBtn = document.createElement("button");
-  closeBtn.textContent = "×";
-  closeBtn.className = "my-extension-close";
+  const closeBtn = document.createElement('button');
+  closeBtn.textContent = '×';
+  closeBtn.className = 'my-extension-close';
 
-  closeBtn.addEventListener("click", () => {
+  closeBtn.addEventListener('click', () => {
     bannerClosed = true;
     messageDiv.remove();
   });
@@ -59,7 +59,6 @@ function ensureExtensionBanner() {
  * Filtering logic & Hebrew NLP
  *************************************************/
 
-// Mapping Hebrew word-based numbers to integers
 const HEBREW_NUMBERS_MAP = {
   'אחד': 1, 'אחת': 1,
   'שני': 2, 'שתיים': 2, 'שתי': 2,
@@ -75,29 +74,29 @@ const HEBREW_NUMBERS_MAP = {
 
 /**
  * Extracts the maximum years of experience mentioned in a string.
- * Handles digits (4+), Hebrew words (חמש), and various sentence structures.
+ * Now handles '4+', '4 ומעלה', and standalone digit patterns.
  */
 function extractExperienceYears(text) {
   let maxYears = 0;
   const wordKeys = Object.keys(HEBREW_NUMBERS_MAP).join('|');
 
-  // 1. Match digits: "4+ years", "5 שנים", etc.
-  const digitRegex = /(\d+)\+?\s*(שנה|שנות|שנים)/g;
+  // 1. Match digits with modifiers: '4+', '4 ומעלה', '4 שנות'
+  // Captures: '4+', '4 ומעלה', '4 שנות', '4 שנים'
+  const digitPattern = /(\d+)(?:\s*\+|\s+ומעלה|\s*שנה|\s*שנות|\s*שנים)/g;
   let match;
-  while ((match = digitRegex.exec(text)) !== null) {
+  while ((match = digitPattern.exec(text)) !== null) {
     maxYears = Math.max(maxYears, parseInt(match[1], 10));
   }
 
-  // 2. Match Hebrew words: "חמש שנים", "שלוש שנות"
-  const wordRegex = new RegExp(`(${wordKeys})\\s*(שנה|שנות|שנים)`, 'g');
-  while ((match = wordRegex.exec(text)) !== null) {
+  // 2. Match Hebrew words with modifiers: 'ארבע ומעלה', 'חמש שנים'
+  const wordPattern = new RegExp(`(${wordKeys})(?:\\s+ומעלה|\\s+שנה|\\s+שנות|\\s+שנים)`, 'g');
+  while ((match = wordPattern.exec(text)) !== null) {
     maxYears = Math.max(maxYears, HEBREW_NUMBERS_MAP[match[1]]);
   }
 
-  // 3. Match reverse/complex structures: "ניסיון של 4 שנים", "מעל שמונה שנות"
-  // This helps capturing "ניסיון של [מספר/מילה] שנים"
-  const complexRegex = new RegExp(`(?:ניסיון|של|מעל|לפחות|מינימום)\\s+(${wordKeys}|\\d+)\\s*(?:שנה|שנות|שנים)`, 'g');
-  while ((match = complexRegex.exec(text)) !== null) {
+  // 3. Fallback for 'ניסיון של X' where X is a word or digit
+  const fallbackPattern = new RegExp(`ניסיון\\s+(?:של\\s+)?(${wordKeys}|\\d+)`, 'g');
+  while ((match = fallbackPattern.exec(text)) !== null) {
     const val = match[1];
     const num = HEBREW_NUMBERS_MAP[val] || parseInt(val, 10);
     if (!isNaN(num)) maxYears = Math.max(maxYears, num);
@@ -107,31 +106,28 @@ function extractExperienceYears(text) {
 }
 
 function filterJobsByExperience() {
-  const jobs = document.querySelectorAll(".positionItem");
+  const jobs = document.querySelectorAll('.positionItem');
   const appliedJobIds = JSON.parse(
-    localStorage.getItem("appliedJobIds") || "[]"
+    localStorage.getItem('appliedJobIds') || '[]'
   );
 
   jobs.forEach((job) => {
-    const requirements = job.querySelector(".requirements");
+    const requirements = job.querySelector('.requirements');
     if (!requirements) return;
 
     const text = requirements.innerText;
     const yearsFound = extractExperienceYears(text);
 
-    // Filter logic: Hide if years required >= 3
-    // We only hide if we explicitly found a number. 
-    // If yearsFound is 0, it might be a junior position without a number.
-    job.style.display = yearsFound >= 3 ? "none" : "";
+    // Hide if years found is 3 or more
+    job.style.display = yearsFound >= 3 ? 'none' : '';
 
-    // Check if job has been applied for
-    const jobIdElement = job.querySelector(".description.number");
+    const jobIdElement = job.querySelector('.description.number');
     if (jobIdElement) {
       const jobIdMatch = jobIdElement.innerText.match(/\d+/);
       if (jobIdMatch && appliedJobIds.includes(jobIdMatch[0])) {
-        job.classList.add("applied-job");
+        job.classList.add('applied-job');
       } else {
-        job.classList.remove("applied-job");
+        job.classList.remove('applied-job');
       }
     }
   });
@@ -141,17 +137,16 @@ function filterJobsByExperience() {
  * Track applied jobs
  *************************************************/
 function addApplyButtonListeners() {
-  const applyLinks = document.querySelectorAll("a.sendPopupCVinner");
+  const applyLinks = document.querySelectorAll('a.sendPopupCVinner');
 
   applyLinks.forEach((link) => {
-    // Avoid adding multiple listeners to the same element
     if (link.getAttribute('data-listener-added')) return;
     
-    link.addEventListener("click", (event) => {
-      const jobContainer = event.target.closest(".positionItem");
+    link.addEventListener('click', (event) => {
+      const jobContainer = event.target.closest('.positionItem');
       if (!jobContainer) return;
 
-      const jobIdElement = jobContainer.querySelector(".description.number");
+      const jobIdElement = jobContainer.querySelector('.description.number');
       if (!jobIdElement) return;
 
       const jobIdMatch = jobIdElement.innerText.match(/\d+/);
@@ -160,14 +155,14 @@ function addApplyButtonListeners() {
       const jobId = jobIdMatch[0];
 
       let appliedJobIds = JSON.parse(
-        localStorage.getItem("appliedJobIds") || "[]"
+        localStorage.getItem('appliedJobIds') || '[]'
       );
       if (!appliedJobIds.includes(jobId)) {
         appliedJobIds.push(jobId);
-        localStorage.setItem("appliedJobIds", JSON.stringify(appliedJobIds));
+        localStorage.setItem('appliedJobIds', JSON.stringify(appliedJobIds));
       }
 
-      jobContainer.classList.add("applied-job");
+      jobContainer.classList.add('applied-job');
     });
 
     link.setAttribute('data-listener-added', 'true');
@@ -183,7 +178,6 @@ function runExtension() {
   addApplyButtonListeners();
 }
 
-// Initial load (document_start safety)
 const bootInterval = setInterval(() => {
   if (document.body) {
     runExtension();
@@ -191,7 +185,6 @@ const bootInterval = setInterval(() => {
   }
 }, 100);
 
-// Observe SPA / dynamic DOM changes
 const observer = new MutationObserver(() => {
   runExtension();
 });
